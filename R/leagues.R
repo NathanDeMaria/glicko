@@ -17,7 +17,7 @@ add_players <- function(ratings, player_groups) {
     group_by(group) %>%
     summarise(
       mean = mean(mean),
-      variance = sum(1/(n() ^ 2) * variance))  # TODO: is this what I want?
+      variance = .init_variance)
 
 
   # Ratings for new players
