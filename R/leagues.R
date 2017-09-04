@@ -1,0 +1,52 @@
+library(dplyr)
+
+
+# Found via optimise(evaluate_league, c(150^2, 300^2))
+.init_variance <- 30950.75
+
+
+#' Add players
+#'
+#' @param ratings
+#' @param player_groups
+#'
+#' @return
+#' @export
+add_players <- function(ratings, player_groups) {
+  group_ratings <- ratings %>% inner_join(player_groups, by = 'name') %>%
+    group_by(group) %>%
+    summarise(
+      mean = mean(mean),
+      variance = sum(1/(n() ^ 2) * variance))  # TODO: is this what I want?
+
+
+  # Ratings for new players
+  new_ratings <- player_groups %>%
+    filter(!name %in% ratings$name) %>%
+    inner_join(group_ratings, by = 'group') %>%
+    select(-group)
+
+  bind_rows(ratings, new_ratings)
+}
+
+
+#' Create initial ratings
+#'
+#' @return
+#' @export
+create_initial_ratings <- function(player_groups,
+                                   init_variance = .init_variance,
+                                   group_diffs = NULL) {
+  group_names <- unique(player_groups$group)
+  if (is.null(group_diffs)) {
+    group_diffs <- rep(0, length(group_names) - 1)
+  }
+  offsets <- cumsum(c(0, group_diffs))
+  group_priors <- 1500 - offsets + mean(offsets)
+  names(group_priors) <- group_names
+
+  player_groups %>%
+    mutate(mean = unlist(group_priors[group]),
+           variance = init_variance) %>%
+    select(-group)
+}
