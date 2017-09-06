@@ -27,7 +27,7 @@ calc_win_probability <- function(matchup) {
 
 
 
-#' Find matchup
+#' Find a head to head win probability
 #'
 #' @param ratings
 #' @param player
@@ -37,7 +37,8 @@ calc_win_probability <- function(matchup) {
 #' @export
 #'
 #' @examples
-matchup <- function(ratings, player, opponent) {
+matchup <- function(all_ratings, player, opponent) {
+  ratings <- all_ratings %>% .filter_most_recent()
   player_stats <- ratings %>% filter(name == player) %>%
     mutate(player_mean = mean, player_variance = variance)
   opp_stats <- ratings %>% filter(name == opponent) %>%

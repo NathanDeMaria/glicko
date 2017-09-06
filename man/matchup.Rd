@@ -4,7 +4,7 @@
 \alias{matchup}
 \title{Find matchup}
 \usage{
-matchup(ratings, player, opponent)
+matchup(all_ratings, player, opponent)
 }
 \arguments{
 \item{opponent}{}
