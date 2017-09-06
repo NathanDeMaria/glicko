@@ -2,7 +2,7 @@
 % Please edit documentation in R/seasons.R
 \name{matchup}
 \alias{matchup}
-\title{Find matchup}
+\title{Find a head to head win probability}
 \usage{
 matchup(all_ratings, player, opponent)
 }
@@ -10,5 +10,5 @@ matchup(all_ratings, player, opponent)
 \item{opponent}{}
 }
 \description{
-Find matchup
+Find a head to head win probability
 }
