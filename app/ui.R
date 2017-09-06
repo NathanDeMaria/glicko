@@ -1,4 +1,4 @@
-players <- ratings$name %>% unique()
+players <- ratings %>% dplyr::select(name) %>% unique()
 
 navbarPage("ELO",
   tabPanel("Ratings", DT::dataTableOutput('ratings')),
