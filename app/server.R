@@ -19,6 +19,11 @@ function(input, output) {
       labs(title = input$player_name, x = 'Week', y = 'Rating')
   })
 
+  output$player_table <- renderTable({
+    ratings %>% filter(week == max(week), name == input$player_name) %>%
+      select(-week) %>% t() %>% data.frame()
+  }, rownames = TRUE, colnames = FALSE)
+
   output$matchup <- renderPlot({
     p1 <- input$player_one
     p2 <- input$player_two

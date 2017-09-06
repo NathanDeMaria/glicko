@@ -6,7 +6,8 @@ navbarPage("ELO",
     selectInput(
       'player_name', label = 'Player',
       choices = players),
-    plotOutput('player')),
+    plotOutput('player'),
+    tableOutput('player_table')),
   tabPanel("Matchups",
     selectInput(
       'player_one', label = 'Player 1', choices = players
