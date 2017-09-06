@@ -5,9 +5,7 @@ library(tibble)
 library(purrr)
 library(lubridate)
 
-# TODO: not this
-data_path <- '/opt/glicko/load_data/lincoln.csv'
-# data_path <- '../load_data/lincoln.csv'
+data_path <- 'data/default.csv'
 
 match_results <- load_results(data_path) %>%
   mutate(pwp = winner_sets ^ 2 / (winner_sets ^ 2 + loser_sets ^ 2)) %>%
