@@ -12,8 +12,10 @@ library(dplyr)
 #'
 #' @return
 #' @export
-add_players <- function(ratings, player_groups) {
-  group_ratings <- ratings %>% inner_join(player_groups, by = 'name') %>%
+add_players <- function(all_ratings, player_groups) {
+  group_ratings <- all_ratings %>%
+    .filter_most_recent() %>%
+    inner_join(player_groups, by = 'name') %>%
     group_by(group) %>%
     summarise(
       mean = mean(mean),
@@ -22,11 +24,12 @@ add_players <- function(ratings, player_groups) {
 
   # Ratings for new players
   new_ratings <- player_groups %>%
-    filter(!name %in% ratings$name) %>%
+    filter(!name %in% all_ratings$name) %>%
     inner_join(group_ratings, by = 'group') %>%
+    mutate(week = max(all_ratings$week)) %>%
     select(-group)
 
-  bind_rows(ratings, new_ratings)
+  bind_rows(all_ratings, new_ratings)
 }
 
 
@@ -36,7 +39,8 @@ add_players <- function(ratings, player_groups) {
 #' @export
 create_initial_ratings <- function(player_groups,
                                    init_variance = .init_variance,
-                                   group_diffs = NULL) {
+                                   group_diffs = NULL,
+                                   init_time = 0) {
   group_names <- unique(player_groups$group)
   if (is.null(group_diffs)) {
     group_diffs <- rep(0, length(group_names) - 1)
@@ -47,6 +51,8 @@ create_initial_ratings <- function(player_groups,
 
   player_groups %>%
     mutate(mean = unlist(group_priors[group]),
-           variance = init_variance) %>%
+           variance = init_variance,
+           # TODO: pick a more general time unit here
+           week = init_time) %>%
     select(-group)
 }

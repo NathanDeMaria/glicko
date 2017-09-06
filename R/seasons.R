@@ -1,8 +1,14 @@
 library(dplyr)
+library(lubridate)
 library(purrr)
 
 
 .q <- log(10) / 400
+
+
+.filter_most_recent <- function(all_ratings) {
+  all_ratings %>% filter(week == max(week))
+}
 
 
 #' Win Probability
@@ -40,7 +46,8 @@ matchup <- function(ratings, player, opponent) {
 }
 
 
-.run_week <- function(current_week, ratings) {
+.run_week <- function(current_week, all_ratings) {
+  ratings <- all_ratings %>% .filter_most_recent()
   week_with_ratings <- current_week %>% left_join(ratings, by = c('winner' = 'name')) %>%
     left_join(ratings, by = c('loser' = 'name'), suffix = c('.winner', '.loser'))
   winner_stack <- week_with_ratings %>%
@@ -54,7 +61,7 @@ matchup <- function(ratings, player, opponent) {
       name = loser, result,
       player_mean = mean.loser, player_variance = variance.loser,
       opponent_mean = mean.winner, opponent_variance = variance.winner)
-  named_results <-  bind_rows(winner_stack, loser_stack)
+  named_results <- bind_rows(winner_stack, loser_stack)
 
   # See http://www.glicko.net/research/glicko.pdf for math
   g_opp <- .g(named_results$opponent_variance)
@@ -63,17 +70,19 @@ matchup <- function(ratings, player, opponent) {
   denom <- 1 / named_results$player_variance + 1 / delta_sq
   new_mean <- named_results$player_mean + .q / denom * g_opp * (named_results$result - exp_result)
   new_variance <- 1 / denom
-  ratings <- named_results %>% mutate(new_mean, new_variance) %>%
+  next_ratings <- named_results %>% mutate(new_mean, new_variance) %>%
     right_join(ratings, by = 'name') %>%
     # If a player didn't play this week, use the previous ratings
     mutate(mean = if_else(is.na(new_mean), mean, new_mean),
-           variance = if_else(is.na(new_variance), variance, new_variance)) %>%
-    select(name, mean, variance)
+           variance = if_else(is.na(new_variance), variance, new_variance),
+           week = current_week$week[1]) %>%
+    select(name, mean, variance, week)
 
   p_ij <- calc_win_probability(named_results)
   discrepancy <- -named_results$result * log(p_ij) - (1 - named_results$result) * log(1 - p_ij)
 
-  list(ratings = ratings, discrepancy = sum(discrepancy))
+  list(ratings = bind_rows(all_ratings, next_ratings),
+       discrepancy = sum(discrepancy))
 }
 
 .g <- function(variance) {
@@ -98,7 +107,10 @@ matchup <- function(ratings, player, opponent) {
   if (length(second_indices) == 0) {
     return(list(current_week))
   }
-  list(current_week[first_indices,], current_week[second_indices,])
+  # Lame...
+  second_week <- current_week[second_indices,] %>%
+    mutate(week = week + days(1))
+  list(current_week[first_indices,], second_week)
 }
 
 #' Run season
@@ -146,20 +158,21 @@ run_season <- function(current_season, ratings) {
 get_league_stats <- function(match_results, init_variance, group_diffs) {
   discrepancy <- 0
   seasons <- match_results %>% split(match_results$season)
-  ratings <- create_initial_ratings(
+  all_ratings <- create_initial_ratings(
     .find_player_groups(seasons[[1]]),
     init_variance,
-    group_diffs)
-  season_result <- run_season(seasons[[1]], ratings)
-  ratings <- season_result$ratings
+    group_diffs,
+    init_time = min(match_results$week) - weeks(1))
+  season_result <- run_season(seasons[[1]], all_ratings)
+  all_ratings <- season_result$ratings
   discrepancy <- discrepancy + season_result$discrepancy
   for (current_season in seasons[-1]) {
     # Find the group each player is in for this season
     player_groups <- .find_player_groups(current_season)
-    ratings <- add_players(ratings, player_groups)
-    season_result <- run_season(current_season, ratings)
-    ratings <- season_result$ratings
+    all_ratings <- add_players(all_ratings, player_groups)
+    season_result <- run_season(current_season, all_ratings)
+    all_ratings <- season_result$ratings
     discrepancy <- discrepancy + season_result$discrepancy
   }
-  list(ratings = ratings, discrepancy = discrepancy)
+  list(ratings = all_ratings, discrepancy = discrepancy)
 }
