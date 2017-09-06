@@ -4,7 +4,7 @@
 \alias{get_league_stats}
 \title{Get league stats}
 \usage{
-get_league_stats(match_results, init_variance, group_diffs)
+get_league_stats(match_results, init_variance, time_variance, group_diffs)
 }
 \description{
 Get league stats
