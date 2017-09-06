@@ -26,7 +26,9 @@ add_players <- function(all_ratings, player_groups) {
   new_ratings <- player_groups %>%
     filter(!name %in% all_ratings$name) %>%
     inner_join(group_ratings, by = 'group') %>%
-    mutate(week = max(all_ratings$week)) %>%
+    mutate(week = max(all_ratings$week),
+           wins = 0,
+           losses = 0) %>%
     select(-group)
 
   bind_rows(all_ratings, new_ratings)
@@ -53,6 +55,8 @@ create_initial_ratings <- function(player_groups,
     mutate(mean = unlist(group_priors[group]),
            variance = init_variance,
            # TODO: pick a more general time unit here
-           week = init_time) %>%
+           week = init_time,
+           wins = 0,
+           losses = 0) %>%
     select(-group)
 }

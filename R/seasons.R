@@ -54,13 +54,18 @@ matchup <- function(ratings, player, opponent) {
     select(
       name = winner, result = pwp,
       player_mean = mean.winner, player_variance = variance.winner,
-      opponent_mean = mean.loser, opponent_variance = variance.loser)
+      opponent_mean = mean.loser, opponent_variance = variance.loser,
+      wins = wins.winner, losses = losses.winner) %>%
+    mutate(wins = wins + 1)
   loser_stack <- week_with_ratings %>%
     mutate(result = 1 - pwp) %>%
     select(
       name = loser, result,
       player_mean = mean.loser, player_variance = variance.loser,
-      opponent_mean = mean.winner, opponent_variance = variance.winner)
+      opponent_mean = mean.winner, opponent_variance = variance.winner,
+      wins = wins.loser, losses = losses.loser) %>%
+    mutate(losses = losses + 1)
+
   named_results <- bind_rows(winner_stack, loser_stack)
 
   # See http://www.glicko.net/research/glicko.pdf for math
@@ -75,8 +80,10 @@ matchup <- function(ratings, player, opponent) {
     # If a player didn't play this week, use the previous ratings
     mutate(mean = if_else(is.na(new_mean), mean, new_mean),
            variance = if_else(is.na(new_variance), variance, new_variance),
-           week = current_week$week[1]) %>%
-    select(name, mean, variance, week)
+           week = current_week$week[1],
+           wins = pmax(wins.x, wins.y, na.rm = TRUE),
+           losses = pmax(losses.x, losses.y, na.rm = TRUE)) %>%
+    select(name, mean, variance, week, wins, losses)
 
   p_ij <- calc_win_probability(named_results)
   discrepancy <- -named_results$result * log(p_ij) - (1 - named_results$result) * log(1 - p_ij)
