@@ -40,6 +40,7 @@ function(input, output) {
       stat_function(fun = dnorm, n = 3000,
                     args = list(mean = p2_rating$mean, sd = sqrt(p2_rating$variance)),
                     aes(color = 'Player 2')) +
-      labs(title = winner_title)
+      labs(title = winner_title) +
+      theme(legend.title = element_blank())
   })
 }
