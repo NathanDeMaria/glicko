@@ -13,7 +13,6 @@ match_results <- load_results(data_path) %>%
 
 ratings <- get_league_stats(
   match_results,
-  49986.84486,
-  11738.58529,
-  c(254.90184, 155.56518, 224.80542, 235.56013, 51.97142))$ratings %>%
-  arrange(desc(mean))
+  48585.88830,
+  12196.90082,
+  c(255.09608, 157.29326, 222.52522, 231.20889, 50.33347))$ratings

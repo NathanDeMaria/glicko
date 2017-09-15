@@ -14,7 +14,7 @@ library(dplyr)
 #' @export
 add_players <- function(all_ratings, player_groups) {
   group_ratings <- all_ratings %>%
-    .filter_most_recent() %>%
+    filter_most_recent() %>%
     inner_join(player_groups, by = 'name') %>%
     group_by(group) %>%
     summarise(

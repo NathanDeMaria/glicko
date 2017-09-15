@@ -3,28 +3,17 @@ library(lubridate)
 library(purrr)
 
 
-.q <- log(10) / 400
-
-
-.filter_most_recent <- function(all_ratings) {
-  all_ratings %>% filter(week == max(week))
-}
-
-
-#' Win Probability
+#' Filter to current
 #'
-#' @param matchup
+#' @param all_ratings
 #'
 #' @return
 #' @export
 #'
 #' @examples
-calc_win_probability <- function(matchup) {
-  variance_combined <- matchup$player_variance + matchup$opponent_variance
-  rating_diff <- matchup$player_mean - matchup$opponent_mean
-  1 / (1 + 10 ^ (-.g(variance_combined) * rating_diff / 400))
+filter_most_recent <- function(all_ratings) {
+  all_ratings %>% filter(week == max(week))
 }
-
 
 
 #' Find a head to head win probability
@@ -38,7 +27,7 @@ calc_win_probability <- function(matchup) {
 #'
 #' @examples
 matchup <- function(all_ratings, player, opponent) {
-  ratings <- all_ratings %>% .filter_most_recent()
+  ratings <- all_ratings %>% filter_most_recent()
   player_stats <- ratings %>% filter(name == player) %>%
     mutate(player_mean = mean, player_variance = variance)
   opp_stats <- ratings %>% filter(name == opponent) %>%
@@ -48,7 +37,7 @@ matchup <- function(all_ratings, player, opponent) {
 
 
 .run_week <- function(current_week, all_ratings) {
-  ratings <- all_ratings %>% .filter_most_recent()
+  ratings <- all_ratings %>% filter_most_recent()
   week_with_ratings <- current_week %>% left_join(ratings, by = c('winner' = 'name')) %>%
     left_join(ratings, by = c('loser' = 'name'), suffix = c('.winner', '.loser'))
   winner_stack <- week_with_ratings %>%
@@ -70,13 +59,10 @@ matchup <- function(all_ratings, player, opponent) {
   named_results <- bind_rows(winner_stack, loser_stack)
 
   # See http://www.glicko.net/research/glicko.pdf for math
-  g_opp <- .g(named_results$opponent_variance)
-  exp_result <- 1 / (1 + 10^(-g_opp * (named_results$player_mean - named_results$opponent_mean) / 400))
-  delta_sq <- 1 / (.q^2 * g_opp^2 * exp_result * (1 - exp_result))
-  denom <- 1 / named_results$player_variance + 1 / delta_sq
-  new_mean <- named_results$player_mean + .q / denom * g_opp * (named_results$result - exp_result)
-  new_variance <- 1 / denom
-  next_ratings <- named_results %>% mutate(new_mean, new_variance) %>%
+  new_ratings <- update_ratings(named_results$player_mean, named_results$player_variance,
+                                named_results$opponent_mean, named_results$opponent_variance,
+                                named_results$result)
+  next_ratings <- named_results %>% cbind(new_ratings) %>%
     right_join(ratings, by = 'name') %>%
     # If a player didn't play this week, use the previous ratings
     mutate(mean = if_else(is.na(new_mean), mean, new_mean),
@@ -91,10 +77,6 @@ matchup <- function(all_ratings, player, opponent) {
 
   list(ratings = bind_rows(all_ratings, next_ratings),
        discrepancy = sum(discrepancy))
-}
-
-.g <- function(variance) {
-  1 / sqrt(1 + 3 * (.q ^ 2) * variance / (pi ^ 2))
 }
 
 # Used in case people played 2 games in the same week
@@ -157,7 +139,7 @@ run_season <- function(current_season, ratings) {
 
 
 .add_variance <- function(all_ratings, time_variance) {
-  # TODO: match up w/ .filter_most_recent
+  # TODO: match up w/ filter_most_recent
   most_recent <- all_ratings$week == max(all_ratings$week)
   all_ratings$variance[most_recent] <- all_ratings$variance[most_recent] + time_variance
   all_ratings
