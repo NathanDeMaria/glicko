@@ -7,9 +7,7 @@ library(lubridate)
 
 data_path <- 'data/default.csv'
 
-match_results <- load_results(data_path) %>%
-  mutate(pwp = winner_sets ^ 2 / (winner_sets ^ 2 + loser_sets ^ 2)) %>%
-  arrange(week)
+match_results <- load_results(data_path) %>% arrange(date)
 
 ratings <- get_league_stats(
   match_results,

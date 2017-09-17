@@ -5,31 +5,32 @@ library(ggplot2)
 function(input, output) {
   # Fill in the spot we created for a plot
   output$ratings <- DT::renderDataTable(
-    ratings %>% filter(week == max(week)) %>%
+    ratings %>% filter_most_recent() %>%
       arrange(desc(mean))
   )
 
   output$player <- renderPlot({
     ratings %>% filter(name == input$player_name) %>%
-      ggplot() + geom_line(aes(x = week, y = mean)) +
-      geom_ribbon(aes(x = week,
+      ggplot() + geom_line(aes(x = date, y = mean)) +
+      geom_ribbon(aes(x = date,
                       ymin = mean - sqrt(variance),
                       ymax = mean + sqrt(variance)),
                   alpha = .2) +
-      labs(title = input$player_name, x = 'Week', y = 'Rating')
+      labs(title = input$player_name, x = 'Date', y = 'Rating')
   })
 
   output$player_table <- renderTable({
-    ratings %>% filter(week == max(week), name == input$player_name) %>%
-      select(-week) %>% t() %>% data.frame()
+    ratings %>% filter_most_recent() %>%
+      filter(name == input$player_name) %>%
+      select(-date) %>% t() %>% data.frame()
   }, rownames = TRUE, colnames = FALSE)
 
   output$matchup <- renderPlot({
     p1 <- input$player_one
     p2 <- input$player_two
     # TODO: don't duplicate this from .filter_most_recent
-    p1_rating <- ratings %>% filter(name == p1, week == max(week))
-    p2_rating <- ratings %>% filter(name == p2, week == max(week))
+    p1_rating <- ratings %>% filter(name == p1, date == max(date))
+    p2_rating <- ratings %>% filter(name == p2, date == max(date))
     win_prob <- matchup(ratings, p1, p2)
 
     winner_title <- if (win_prob > .5) {
