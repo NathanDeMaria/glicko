@@ -13,3 +13,4 @@ Imports:
   magrittr,
   readr,
 RoxygenNote: 6.0.1
+Suggests: testthat
