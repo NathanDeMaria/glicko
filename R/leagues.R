@@ -45,7 +45,7 @@ create_initial_ratings <- function(player_groups,
                                    init_time = 0) {
   group_names <- unique(player_groups$group)
   if (is.null(group_diffs)) {
-    group_diffs <- rep(0, length(group_names) - 1)
+    group_diffs <- rep(0, max(length(group_names) - 1, 1))
   }
   offsets <- cumsum(c(0, group_diffs))
   group_priors <- 1500 - offsets + mean(offsets)
