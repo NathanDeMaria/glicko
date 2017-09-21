@@ -8,8 +8,22 @@ library(readr)
 NFL_SCOREBOARD <- 'http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
 SEASON_TYPES <- c(regular = 2, post = 3)
 
+.lazy_get <- function(url, query) {
+  params <- paste(names(query), query, sep = '', collapse = '')
+  file_name <- sprintf('load_data/the_internet/%s%s.rds',
+                       gsub('[^[:alnum:] ]', '', url),
+                       params)
+  if (file.exists(file_name)) {
+    readRDS(file_name)
+  } else {
+    content <- GET(NFL_SCOREBOARD, query = query) %>% content()
+    saveRDS(content, file_name)
+    content
+  }
+}
+
 .get_nfl_scoreboard <- function(season, week, season_type) {
-  GET(NFL_SCOREBOARD, query = list(
+  .lazy_get(NFL_SCOREBOARD, query = list(
     lang = 'en',
     region = 'us',
     calendartype = 'blacklist',
@@ -17,7 +31,7 @@ SEASON_TYPES <- c(regular = 2, post = 3)
     dates = season,
     seasontype = season_type,
     week = week
-  )) %>% content()
+  ))
 }
 
 .parse_game <- function(event) {
@@ -68,20 +82,30 @@ SEASON_TYPES <- c(regular = 2, post = 3)
     mutate(season)
 }
 
-nfl_data <- seq(1999, 2016) %>%
-  map_df(~.get_season_results(.x)) %>%
-  bind_rows()
-
 .remove_spaces <- function(team_name) {
   # Some names look like Minnesota            Vikings
   gsub('\\s+', ' ', team_name)
 }
 
 .replace_old_names <- function(team_name) {
-  recode(team_name, 'St. Louis Rams' = 'Los Angeles Rams')
+  recode(team_name, 'St. Louis Rams' = 'Los Angeles Rams') %>%
+    recode('San Diego Chargers' = 'Los Angeles Chargers')
 }
 
-nfl_data %>%
+seasons <- seq(1999, 2017)
+
+# Lame: removing "cache" for current season
+.clear_season <- function(season) {
+  files <- dir('load_data/the_internet/', full.names = TRUE)
+  season_files <- files[grepl(sprintf('dates%d', season), files)]
+  file.remove(season_files)
+}
+
+.clear_season(seasons[length(seasons)])
+
+nfl_data <- seasons %>%
+  map_df(~.get_season_results(.x)) %>%
+  bind_rows() %>%
   mutate(winner = .remove_spaces(winner) %>% .replace_old_names()) %>%
   mutate(loser = .remove_spaces(loser) %>% .replace_old_names()) %>%
   # TODO: divisions? doesn't matter as much
