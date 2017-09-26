@@ -12,6 +12,5 @@ match_results <- load_results(data_path) %>% arrange(date)
 
 ratings <- get_league_stats(
   match_results,
-  14918.23,
-  9838.96,
+  14892.584, 9704.322,
   NULL)$ratings
