@@ -1,5 +1,6 @@
 library(dplyr)
 library(httr)
+library(lubridate)
 library(purrr)
 library(readr)
 
@@ -56,8 +57,7 @@ SEASON_TYPES <- c(regular = 2, post = 3)
     loser = team_names[!is_winner],
     winner_score = scores[is_winner],
     loser_score = scores[!is_winner],
-    # TODO: care about specific time? or group this by date?
-    date = as.Date(event$date)
+    date = as.Date(event$date) %>% round_date(unit = 'week')
   )
 }
 
