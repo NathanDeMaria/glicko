@@ -17,10 +17,9 @@ library(purrr)
                 select(player = loser, opponent = winner,
                        player_score = loser_score, opponent_score = winner_score))
 
-  # TODO: include bye weeks
   week_comparison %>%
     mutate(player = name) %>%
-    inner_join(scores, by = c('player' = 'player'))
+    left_join(scores, by = c('player' = 'player'))
 }
 
 #' Create comparisons
