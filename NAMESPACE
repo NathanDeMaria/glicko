@@ -2,6 +2,7 @@
 
 export(add_players)
 export(calc_win_probability)
+export(create_comparisons)
 export(create_initial_ratings)
 export(filter_most_recent)
 export(get_league_stats)

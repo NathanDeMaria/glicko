@@ -49,4 +49,32 @@ function(input, output) {
       labs(title = winner_title) +
       theme(legend.title = element_blank())
   })
+
+  output$comparison <- renderUI({
+    comparisons[[as.integer(input$selected_week)]] %>%
+      select(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) %>%
+      arrange(rank_current) %>%
+      pmap(function(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) {
+        rank_sign <- ifelse(rank_change > 0, '↑',
+                            ifelse(rank_change < 0, '↓', '↔'))
+        result <- ifelse(player_score > opponent_score, 'win',
+                         ifelse(player_score < opponent_score, 'loss', 'tie'))
+        mean_change_text <- ifelse(mean_change > 0, sprintf('+%.01f', mean_change),
+                                   ifelse(mean_change < 0, sprintf('-%.01f', abs(mean_change)), '↔'))
+        htmlTemplate(
+          'playerSummary.html',
+          rank = rank_current,
+          rank_sign = rank_sign,
+          rank_change = abs(rank_change),
+          player_name = player,
+          win_loss = result,
+          opponent = opponent,
+          player_score = player_score,
+          opponent_score = opponent_score,
+          mean_change = mean_change_text,
+          player_rating = sprintf('%.02f', mean_current),
+          document_ = F
+        )
+    }) %>% div()
+  })
 }

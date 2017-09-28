@@ -1,4 +1,7 @@
 players <- ratings %>% dplyr::select(name) %>% unique()
+dates <- match_results$date %>% unique() %>% sort(decreasing = T)
+date_choices <- seq_along(dates) %>% rev()
+names(date_choices) <- dates
 
 navbarPage("ELO",
   tabPanel("Ratings", DT::dataTableOutput('ratings')),
@@ -15,5 +18,8 @@ navbarPage("ELO",
     selectInput(
       'player_two', label = 'Player 2', choices = players
     ),
-    plotOutput('matchup'))
+    plotOutput('matchup')),
+  tabPanel("Weekly Updates",
+    selectInput('selected_week', label = 'Week', choices = date_choices),
+    htmlOutput('comparison'))
 )
