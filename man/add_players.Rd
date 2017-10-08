@@ -4,7 +4,7 @@
 \alias{add_players}
 \title{Add players}
 \usage{
-add_players(all_ratings, player_groups)
+add_players(all_ratings, player_groups, init_variance)
 }
 \arguments{
 \item{player_groups}{}
