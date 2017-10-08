@@ -1,10 +1,12 @@
+library(dplyr)
+
 context("Basic season")
 
 test_that("Simple run_season runs", {
   current_season <- tibble(
-    winner = 'Peyton',
-    loser = 'Tom',
-    pwp = 1,
+    name = c('Peyton', 'Tom'),
+    opponent = c('Tom', 'Peyton'),
+    result = c(1, 0),
     date = as.Date('1989-12-13')
   )
   ratings <- tibble(
@@ -24,10 +26,12 @@ test_that("Simple run_season runs", {
 
 test_that("Season with byes", {
   current_season <- tibble(
-    winner = c('Peyton', 'Drew', 'Peyton'),
-    loser = c('Tom', 'Aaron', 'Drew'),
-    pwp = 1,
-    date = c(as.Date('1989-12-13'), as.Date('1989-12-13'), as.Date('1989-12-20'))
+    name = c('Peyton', 'Tom', 'Drew', 'Aaron', 'Peyton', 'Drew'),
+    opponent = c('Tom', 'Peyton', 'Aaron', 'Drew', 'Drew', 'Peyton'),
+    result = c(1, 0, 1, 0, 1, 0),
+    date = c(as.Date('1989-12-13'), as.Date('1989-12-13'),
+             as.Date('1989-12-13'), as.Date('1989-12-13'),
+             as.Date('1989-12-20'), as.Date('1989-12-20'))
   )
   ratings <- tibble(
     name = c('Peyton', 'Tom', 'Drew', 'Aaron'),
