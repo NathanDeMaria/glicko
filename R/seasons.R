@@ -38,25 +38,8 @@ matchup <- function(all_ratings, player, opponent) {
 
 .run_day <- function(current_day, all_ratings) {
   ratings <- all_ratings %>% filter_most_recent()
-
-  flipped <- current_day %>%
-    mutate(
-      name = loser,
-      result = 1 - pwp,
-      opponent = winner
-    ) %>%
-    select(name, result, opponent)
-  each_results <- current_day %>%
-    select(
-      name = winner,
-      result = pwp,
-      opponent = loser
-    ) %>%
-    bind_rows(flipped)
-
-  # DROP OFF THE BAD DATES?
   named_results <- ratings %>%
-    left_join(each_results, by = 'name') %>%
+    left_join(current_day, by = 'name') %>%
     # TODO: filter to only opponent mean/var?
     left_join(ratings, by = c('opponent' = 'name'), suffix = c('', '_opponent'))
 
@@ -110,13 +93,8 @@ run_season <- function(current_season, ratings) {
 .find_player_groups <- function(match_results) {
   # TODO: sanity check to make sure there's not duplicates?
   match_results %>%
-    distinct(winner, group) %>%
-    select(name = winner, group) %>%
-    full_join(
-      match_results %>%
-        distinct(loser, group) %>%
-        select(name = loser, group),
-      by = c('name', 'group'))
+    distinct(name, group) %>%
+    select(name, group)
 }
 
 
@@ -136,9 +114,30 @@ run_season <- function(current_season, ratings) {
 #'
 #' @examples
 get_league_stats <- function(match_results, init_variance, time_variance, group_diffs) {
-  discrepancy <- 0
+  match_results <- match_results %>%
+    mutate(pwp = winner_score ^ 2 / (winner_score ^ 2 + loser_score ^ 2))
+  flipped <- match_results %>%
+    mutate(
+      name = loser,
+      result = 1 - pwp,
+      opponent = winner
+    ) %>%
+    select(
+      name, result, opponent,
+      season, date, group)
+  match_results <- match_results %>%
+    select(
+      name = winner,
+      result = pwp,
+      opponent = loser,
+      season,
+      date,
+      group
+    ) %>%
+    bind_rows(flipped)
+
+
   seasons <- match_results %>%
-    mutate(pwp = winner_score ^ 2 / (winner_score ^ 2 + loser_score ^ 2)) %>%
     split(match_results$season)
   all_ratings <- create_initial_ratings(
     .find_player_groups(seasons[[1]]),
@@ -147,7 +146,7 @@ get_league_stats <- function(match_results, init_variance, time_variance, group_
     init_time = min(match_results$date) - days(1))
   season_result <- run_season(seasons[[1]], all_ratings)
   all_ratings <- season_result$ratings
-  discrepancy <- discrepancy + season_result$discrepancy
+  discrepancy <- season_result$discrepancy
   for (current_season in seasons[-1]) {
     # Find the group each player is in for this season
     player_groups <- .find_player_groups(current_season)
