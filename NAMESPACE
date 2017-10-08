@@ -2,10 +2,12 @@
 
 export(add_players)
 export(calc_win_probability)
+export(create_comparisons)
 export(create_initial_ratings)
 export(filter_most_recent)
 export(get_league_stats)
 export(load_results)
 export(matchup)
+export(melt_match_results)
 export(run_season)
 export(update_ratings)

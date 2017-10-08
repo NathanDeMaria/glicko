@@ -13,8 +13,8 @@
 #'
 #' @examples
 calc_win_probability <- function(matchup) {
-  variance_combined <- matchup$player_variance + matchup$opponent_variance
-  rating_diff <- matchup$player_mean - matchup$opponent_mean
+  variance_combined <- matchup$variance + matchup$variance_opponent
+  rating_diff <- matchup$mean - matchup$mean_opponent
   1 / (1 + 10 ^ (-.g(variance_combined) * rating_diff / 400))
 }
 
