@@ -1,6 +1,9 @@
 <!DOCTYPE HTML>
-<div>
-	<h2>{{ rank }} {{ player_name }} ({{ player_rating }})</h2>
-	<p>Change since last week: {{ rank_sign }} {{ rank_change }} ({{ mean_change }})</p>
-	<p>Result: {{ win_loss }} vs. {{ opponent }} {{ player_score }}-{{ opponent_score }}</p>
-</div>
+
+<tr>
+  <td><h2>{{ rank }}</h2></td>
+  <td>{{ player_rating }}</td>
+  <td>{{ player_name }}</td>
+  <td>{{ rank_sign }} {{ rank_change }} ({{ mean_change }})</td>
+  <td>{{ win_loss }} vs. {{ opponent }} {{ player_score }}-{{ opponent_score }}</td>
+</tr>

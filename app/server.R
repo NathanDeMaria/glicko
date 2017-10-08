@@ -51,14 +51,14 @@ function(input, output) {
   })
 
   output$comparison <- renderUI({
-    comparisons[[as.integer(input$selected_week)]] %>%
+    rows <- comparisons[[as.integer(input$selected_week)]] %>%
       select(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) %>%
       arrange(rank_current) %>%
       pmap(function(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) {
         rank_sign <- ifelse(rank_change > 0, '↑',
                             ifelse(rank_change < 0, '↓', '↔'))
-        result <- ifelse(player_score > opponent_score, 'win',
-                         ifelse(player_score < opponent_score, 'loss', 'tie'))
+        result <- ifelse(player_score > opponent_score, 'Win',
+                         ifelse(player_score < opponent_score, 'Loss', 'Tie'))
         mean_change_text <- ifelse(mean_change > 0, sprintf('+%.01f', mean_change),
                                    ifelse(mean_change < 0, sprintf('-%.01f', abs(mean_change)), '↔'))
         htmlTemplate(
@@ -75,6 +75,11 @@ function(input, output) {
           player_rating = sprintf('%.02f', mean_current),
           document_ = F
         )
-    }) %>% div()
+      })
+    tags$table(
+      tableHeader(c('Rank', 'Rating', 'Player', 'Change', 'Result')),
+      tags$tbody(rows),
+      class = 'comparison-table'
+    )
   })
 }

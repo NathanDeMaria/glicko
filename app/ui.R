@@ -21,5 +21,6 @@ navbarPage("ELO",
     plotOutput('matchup')),
   tabPanel("Weekly Updates",
     selectInput('selected_week', label = 'Week', choices = date_choices),
-    htmlOutput('comparison'))
+    htmlOutput('comparison')),
+  theme = 'table.css'
 )
