@@ -1,10 +1,6 @@
 library(dplyr)
 
 
-# Found via optimise(evaluate_league, c(150^2, 300^2))
-.init_variance <- 30950.75
-
-
 #' Add players
 #'
 #' @param ratings
@@ -12,14 +8,14 @@ library(dplyr)
 #'
 #' @return
 #' @export
-add_players <- function(all_ratings, player_groups) {
+add_players <- function(all_ratings, player_groups, init_variance) {
   group_ratings <- all_ratings %>%
     filter_most_recent() %>%
     inner_join(player_groups, by = 'name') %>%
     group_by(group) %>%
     summarise(
       mean = mean(mean),
-      variance = .init_variance)
+      variance = init_variance)
 
 
   # Ratings for new players
