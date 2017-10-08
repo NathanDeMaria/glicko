@@ -79,14 +79,18 @@ matchup <- function(all_ratings, player, opponent) {
 #' @return
 #' @export
 run_season <- function(current_season, ratings) {
-  discrepancy <- 0
-  day_tables <- current_season %>% split(.$date)
-  for (current_day in day_tables) {
-    day_result <- .run_day(current_day, ratings)
-    ratings <- day_result$ratings
-    discrepancy <- discrepancy + day_result$discrepancy
-  }
-  list(ratings = ratings, discrepancy = discrepancy)
+  current_season %>%
+    split(.$date) %>%
+    purrr::reduce(
+      function(state, current_day) {
+        day_result <- .run_day(current_day, state$ratings)
+        list(
+          ratings = day_result$ratings,
+          discrepancy = state$discrepancy + day_result$discrepancy
+        )
+      },
+      .init = list(discrepancy = 0, ratings = ratings)
+    )
 }
 
 
@@ -136,7 +140,6 @@ get_league_stats <- function(match_results, init_variance, time_variance, group_
     ) %>%
     bind_rows(flipped)
 
-
   seasons <- match_results %>%
     split(match_results$season)
   all_ratings <- create_initial_ratings(
@@ -144,17 +147,22 @@ get_league_stats <- function(match_results, init_variance, time_variance, group_
     init_variance,
     group_diffs,
     init_time = min(match_results$date) - days(1))
-  season_result <- run_season(seasons[[1]], all_ratings)
-  all_ratings <- season_result$ratings
-  discrepancy <- season_result$discrepancy
-  for (current_season in seasons[-1]) {
-    # Find the group each player is in for this season
-    player_groups <- .find_player_groups(current_season)
-    all_ratings <- .add_variance(all_ratings, time_variance)
-    all_ratings <- add_players(all_ratings, player_groups)
-    season_result <- run_season(current_season, all_ratings)
-    all_ratings <- season_result$ratings
-    discrepancy <- discrepancy + season_result$discrepancy
-  }
-  list(ratings = all_ratings, discrepancy = discrepancy)
+  initial_season_result <- run_season(seasons[[1]], all_ratings)
+
+  seasons[-1] %>%
+    purrr::reduce(
+      function(state, current_season) {
+        # Find the group each player is in for this season
+        player_groups <- .find_player_groups(current_season)
+        all_ratings <- state$ratings %>%
+          .add_variance(time_variance) %>%
+          add_players(player_groups)
+        season_result <- run_season(current_season, all_ratings)
+        list(
+          ratings = season_result$ratings,
+          discrepancy = state$discrepancy + season_result$discrepancy
+        )
+      },
+      .init = initial_season_result
+    )
 }
