@@ -28,10 +28,9 @@ filter_most_recent <- function(all_ratings) {
 #' @examples
 matchup <- function(all_ratings, player, opponent) {
   ratings <- all_ratings %>% filter_most_recent()
-  player_stats <- ratings %>% filter(name == player) %>%
-    mutate(player_mean = mean, player_variance = variance)
+  player_stats <- ratings %>% filter(name == player)
   opp_stats <- ratings %>% filter(name == opponent) %>%
-    mutate(opponent_mean = mean, opponent_variance = variance)
+    mutate(mean_opponent = mean, variance_opponent = variance)
   cbind(player_stats, opp_stats) %>% calc_win_probability()
 }
 
