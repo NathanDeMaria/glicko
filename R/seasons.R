@@ -118,28 +118,6 @@ run_season <- function(current_season, ratings) {
 #'
 #' @examples
 get_league_stats <- function(match_results, init_variance, time_variance, group_diffs) {
-  match_results <- match_results %>%
-    mutate(pwp = winner_score ^ 2 / (winner_score ^ 2 + loser_score ^ 2))
-  flipped <- match_results %>%
-    mutate(
-      name = loser,
-      result = 1 - pwp,
-      opponent = winner
-    ) %>%
-    select(
-      name, result, opponent,
-      season, date, group)
-  match_results <- match_results %>%
-    select(
-      name = winner,
-      result = pwp,
-      opponent = loser,
-      season,
-      date,
-      group
-    ) %>%
-    bind_rows(flipped)
-
   seasons <- match_results %>%
     split(match_results$season)
   all_ratings <- create_initial_ratings(

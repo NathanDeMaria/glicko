@@ -44,3 +44,39 @@ load_results <- function(csv_path) {
   results %>% group_by(date) %>% map(~.check_duplicates)
   results
 }
+
+
+#' Melt Match Results
+#'
+#' Takes in match_results in winner/loser form
+#' and turns it into name/opponent form
+#'
+#' @param match_results
+#'
+#' @return
+#' @export
+#'
+#' @examples
+melt_match_results <- function(match_results) {
+  match_results <- match_results %>%
+    mutate(pwp = winner_score ^ 2 / (winner_score ^ 2 + loser_score ^ 2))
+  flipped <- match_results %>%
+    mutate(
+      name = loser,
+      result = 1 - pwp,
+      opponent = winner
+    ) %>%
+    select(
+      name, result, opponent,
+      season, date, group)
+  match_results %>%
+    select(
+      name = winner,
+      result = pwp,
+      opponent = loser,
+      season,
+      date,
+      group
+    ) %>%
+    bind_rows(flipped)
+}
