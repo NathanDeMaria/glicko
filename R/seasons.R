@@ -38,45 +38,54 @@ matchup <- function(all_ratings, player, opponent) {
 
 .run_day <- function(current_day, all_ratings) {
   ratings <- all_ratings %>% filter_most_recent()
-  day_with_ratings <- current_day %>% left_join(ratings, by = c('winner' = 'name')) %>%
-    left_join(ratings, by = c('loser' = 'name'), suffix = c('.winner', '.loser'))
-  winner_stack <- day_with_ratings %>%
-    select(
-      name = winner, result = pwp,
-      player_mean = mean.winner, player_variance = variance.winner,
-      opponent_mean = mean.loser, opponent_variance = variance.loser,
-      wins = wins.winner, losses = losses.winner) %>%
-    mutate(wins = wins + 1)
-  loser_stack <- day_with_ratings %>%
-    mutate(result = 1 - pwp) %>%
-    select(
-      name = loser, result,
-      player_mean = mean.loser, player_variance = variance.loser,
-      opponent_mean = mean.winner, opponent_variance = variance.winner,
-      wins = wins.loser, losses = losses.loser) %>%
-    mutate(losses = losses + 1)
 
-  named_results <- bind_rows(winner_stack, loser_stack)
+  flipped <- current_day %>%
+    mutate(
+      name = loser,
+      result = 1 - pwp,
+      opponent = winner
+    ) %>%
+    select(name, result, opponent)
+  each_results <- current_day %>%
+    select(
+      name = winner,
+      result = pwp,
+      opponent = loser
+    ) %>%
+    bind_rows(flipped)
+
+  # DROP OFF THE BAD DATES?
+  named_results <- ratings %>%
+    left_join(each_results, by = 'name') %>%
+    # TODO: filter to only opponent mean/var?
+    left_join(ratings, by = c('opponent' = 'name'), suffix = c('', '_opponent'))
 
   # See http://www.glicko.net/research/glicko.pdf for math
-  new_ratings <- update_ratings(named_results$player_mean, named_results$player_variance,
-                                named_results$opponent_mean, named_results$opponent_variance,
+  new_ratings <- update_ratings(named_results$mean, named_results$variance,
+                                named_results$mean_opponent, named_results$variance_opponent,
                                 named_results$result)
-  next_ratings <- named_results %>% cbind(new_ratings) %>%
-    right_join(ratings, by = 'name') %>%
-    # If a player didn't play this day, use the previous ratings
-    mutate(mean = if_else(is.na(new_mean), mean, new_mean),
-           variance = if_else(is.na(new_variance), variance, new_variance),
-           date = current_day$date[1],
-           wins = pmax(wins.x, wins.y, na.rm = TRUE),
-           losses = pmax(losses.x, losses.y, na.rm = TRUE)) %>%
-    select(name, mean, variance, date, wins, losses)
+
+  next_ratings <- named_results %>%
+    cbind(new_ratings) %>%
+    mutate(
+      win_update = if_else(is.na(result), 0, as.numeric(result > 0.5)),
+      loss_update = if_else(is.na(result), 0, as.numeric(result < 0.5))
+      # TODO: TIES???
+    ) %>%
+    mutate(
+      mean = if_else(is.na(new_mean), mean, new_mean),
+      variance = if_else(is.na(new_variance), variance, new_variance),
+      wins = wins + win_update,
+      losses = losses + loss_update
+    ) %>%
+    select(name, mean, variance, wins, losses) %>%
+    mutate(date = current_day$date[1])
 
   p_ij <- calc_win_probability(named_results)
   discrepancy <- -named_results$result * log(p_ij) - (1 - named_results$result) * log(1 - p_ij)
 
   list(ratings = bind_rows(all_ratings, next_ratings),
-       discrepancy = sum(discrepancy))
+       discrepancy = sum(discrepancy, na.rm = T))
 }
 
 #' Run season
