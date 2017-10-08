@@ -134,7 +134,7 @@ get_league_stats <- function(match_results, init_variance, time_variance, group_
         player_groups <- .find_player_groups(current_season)
         all_ratings <- state$ratings %>%
           .add_variance(time_variance) %>%
-          add_players(player_groups)
+          add_players(player_groups, init_variance)
         season_result <- run_season(current_season, all_ratings)
         list(
           ratings = season_result$ratings,
