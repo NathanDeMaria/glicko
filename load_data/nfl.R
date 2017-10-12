@@ -110,4 +110,5 @@ nfl_data <- seasons %>%
   mutate(loser = .remove_spaces(loser) %>% .replace_old_names()) %>%
   # TODO: divisions? doesn't matter as much
   mutate(group = 'nfl') %>%
-  write_csv('load_data/nfl.csv')
+  write_csv('load_data/nfl.csv') %>%
+  write_csv('app/data/default.csv')
