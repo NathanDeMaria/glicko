@@ -101,10 +101,10 @@ run_season <- function(current_season, ratings) {
 }
 
 
-.add_variance <- function(all_ratings, time_variance) {
-  # TODO: match up w/ filter_most_recent
+.run_offseason <- function(all_ratings, time_variance, regression_rate) {
   most_recent <- all_ratings$date == max(all_ratings$date)
   all_ratings$variance[most_recent] <- all_ratings$variance[most_recent] + time_variance
+  all_ratings$mean[most_recent] <- all_ratings$mean[most_recent] + (1500 - all_ratings$mean[most_recent]) * regression_rate
   all_ratings
 }
 
@@ -116,7 +116,7 @@ run_season <- function(current_season, ratings) {
 #' @export
 #'
 #' @examples
-get_league_stats <- function(match_results, init_variance, time_variance, group_diffs) {
+get_league_stats <- function(match_results, init_variance, time_variance, regression_rate, group_diffs) {
   seasons <- match_results %>%
     split(match_results$season)
   all_ratings <- create_initial_ratings(
@@ -132,7 +132,7 @@ get_league_stats <- function(match_results, init_variance, time_variance, group_
         # Find the group each player is in for this season
         player_groups <- .find_player_groups(current_season)
         all_ratings <- state$ratings %>%
-          .add_variance(time_variance) %>%
+          .run_offseason(time_variance, regression_rate) %>%
           add_players(player_groups, init_variance)
         season_result <- run_season(current_season, all_ratings)
         list(
