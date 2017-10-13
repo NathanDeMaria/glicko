@@ -104,7 +104,7 @@ run_season <- function(current_season, ratings) {
 .run_offseason <- function(all_ratings, time_variance, regression_rate) {
   most_recent <- all_ratings$date == max(all_ratings$date)
   all_ratings$variance[most_recent] <- all_ratings$variance[most_recent] + time_variance
-  all_ratings$mean[most_recent] <- all_ratings$mean[most_recent] + (1500 - all_ratings$mean[most_recent]) * regression_rate
+  all_ratings$mean[most_recent] <- all_ratings$mean[most_recent] + (INIT_AVG - all_ratings$mean[most_recent]) * regression_rate
   all_ratings
 }
 
