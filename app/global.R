@@ -7,13 +7,15 @@ library(lubridate)
 library(readr)
 
 data_path <- 'data/default.csv'
+hyper_path <- 'data/hyperparams.RDS'
 
 match_results <- load_results(data_path) %>%
   arrange(date)
+hyperparams <- readRDS(hyper_path)
 
-ratings <- get_league_stats(
-  match_results %>% melt_match_results(),
-  2.005950e+04, 8.684297e+03, 3.414318e-01,
-  NULL)$ratings
+ratings <- do.call(
+  get_league_stats,
+  c(list(match_results = match_results %>% melt_match_results()),
+    hyperparams))$ratings
 
 comparisons <- create_comparisons(ratings, match_results)
