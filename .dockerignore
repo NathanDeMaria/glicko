@@ -1,5 +1,6 @@
 load_data/*
 app/data/*.csv
+app/data/*.RDS
 .git
 .dockerignore
 

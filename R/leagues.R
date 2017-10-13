@@ -1,6 +1,9 @@
 library(dplyr)
 
 
+INIT_AVG <- 1500
+
+
 #' Add players
 #'
 #' @param ratings
@@ -44,7 +47,7 @@ create_initial_ratings <- function(player_groups,
     group_diffs <- rep(0, max(length(group_names) - 1, 1))
   }
   offsets <- cumsum(c(0, group_diffs))
-  group_priors <- 1500 - offsets + mean(offsets)
+  group_priors <- INIT_AVG - offsets + mean(offsets)
   names(group_priors) <- group_names
 
   player_groups %>%
