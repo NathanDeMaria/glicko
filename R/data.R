@@ -4,17 +4,6 @@ library(readr)
 library(purrr)
 
 
-.check_duplicates <- function(day_matches) {
-  players <- c(day_matches$winner, day_matches$loser)
-  dupes <- duplicated(players)
-  if (any(dupes)) {
-    stop(sprintf("Found players with multiple games on %s: %s",
-                 day_matches$date[1],
-                 paste(players[dupes], collapse = ', ')))
-  }
-}
-
-
 #' Load CSV
 #'
 #' @param csv_path
@@ -39,9 +28,6 @@ load_results <- function(csv_path) {
     stop("Missing required columns: ",
          paste(required_columns[missed_requirements], collapse = ', '))
   }
-
-  # Each player can only play one game per date
-  results %>% group_by(date) %>% map(~.check_duplicates)
   results
 }
 
@@ -69,7 +55,7 @@ melt_match_results <- function(match_results) {
     select(
       name, result, opponent,
       season, date, group)
-  match_results %>%
+  melted <- match_results %>%
     select(
       name = winner,
       result = pwp,
@@ -79,4 +65,14 @@ melt_match_results <- function(match_results) {
       group
     ) %>%
     bind_rows(flipped)
+  # Extra assert that each player played at most 1 game in each week
+  duplicates <- melted %>%
+    group_by(name, date) %>%
+    summarise(count = n()) %>%
+    filter(count > 1)
+  if (nrow(duplicates) > 0) {
+    print(duplicates)
+    stop("Players played multiple games in the same week!")
+  }
+  melted
 }
