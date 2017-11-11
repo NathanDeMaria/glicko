@@ -87,11 +87,11 @@ SEASON_TYPES <- c(
 .get_season_results <- function(season) {
   # Might only need to go to 16 for NCAA,
   # but weeks after the final week return empty lists anyway
-  regular_season <- seq_len(17) %>%
+  regular_season <- seq_len(16) %>%
     map(~.get_week_results(season, .x, SEASON_TYPES['regular'])) %>%
     bind_rows()
-  post_season <- seq_len(5) %>%
-    map(~.get_week_results(season, .x, SEASON_TYPES['post'])) %>%
+  post_season <- seq_len(1) %>%
+    map(~.get_week_results(season, .x, SEASON_TYPES['bowls'])) %>%
     bind_rows()
   bind_rows(regular_season, post_season) %>%
     mutate(season)
@@ -131,4 +131,5 @@ ncaa_data <- seasons %>%
   split(.$date) %>%
   purrr::map_df(.remove_duplicates) %>%
   bind_rows() %>%
-  write_csv('load_data/ncaa.csv')
+  write_csv('load_data/ncaa.csv') %>%
+  write_csv('app/data/default.csv')

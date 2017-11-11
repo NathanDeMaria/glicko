@@ -39,12 +39,12 @@ add_players <- function(all_ratings, player_groups, init_variance) {
 #' @return
 #' @export
 create_initial_ratings <- function(player_groups,
-                                   init_variance = .init_variance,
+                                   init_variance,
                                    group_diffs = NULL,
                                    init_time = 0) {
   group_names <- unique(player_groups$group)
   if (is.null(group_diffs)) {
-    group_diffs <- rep(0, max(length(group_names) - 1, 1))
+    group_diffs <- rep(0, length(group_names) - 1)
   }
   offsets <- cumsum(c(0, group_diffs))
   group_priors <- INIT_AVG - offsets + mean(offsets)

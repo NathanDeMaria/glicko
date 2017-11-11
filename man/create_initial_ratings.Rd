@@ -4,8 +4,8 @@
 \alias{create_initial_ratings}
 \title{Create initial ratings}
 \usage{
-create_initial_ratings(player_groups, init_variance = .init_variance,
-  group_diffs = NULL, init_time = 0)
+create_initial_ratings(player_groups, init_variance, group_diffs = NULL,
+  init_time = 0)
 }
 \description{
 Create initial ratings
