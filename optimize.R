@@ -10,12 +10,12 @@ optimize_ratings <- function(data_file, init_params) {
     arrange(date)
 
   evaluate_league <- function(x) {
-    get_league_stats(match_results, x[1], x[2], x[3], x[4])$discrepancy
+    get_league_stats(match_results, x[1], x[2], x[3], NULL)$discrepancy
   }
 
   o <- optim(init_params, evaluate_league)
 
-  if(o$convergence == 0) {
+  if (o$convergence == 0 & !is.na(o$value)) {
     beep()
   } else {
     beep('wilhelm')
@@ -28,12 +28,12 @@ save_params <- function(par, rds) {
     init_variance = par[1],
     time_variance = par[2],
     regression_rate = par[3],
-    group_diffs = par[4])
+    group_diffs = NULL)
   saveRDS(params, file = rds)
 }
 
 
 data_file <- 'load_data/ncaa.csv'
-init_ratings <- c(2.005950e+04, 8.684297e+03, 3.414318e-01, NULL)
-par <- optimize_ratings(data_file, init_ratings)
+init_params <- c(2.006160e+04, 1.068920e+04, -2.573196e-02)
+par <- optimize_ratings(data_file, init_params)
 save_params(par, 'load_data/ncaa.rds')
