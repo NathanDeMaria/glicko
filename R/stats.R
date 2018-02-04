@@ -19,7 +19,8 @@ library(purrr)
 
   week_comparison %>%
     mutate(player = name) %>%
-    left_join(scores, by = c('player' = 'player'))
+    left_join(scores, by = c('player' = 'player')) %>%
+    mutate(date = results$date[1])
 }
 
 #' Create comparisons
@@ -36,10 +37,9 @@ create_comparisons <- function(all_ratings, match_results) {
   weekly_results <- match_results %>% split(match_results$date)
   weeks <- length(weekly_ratings)
 
-  comparisons <- seq_len(weeks - 1) %>%
+  seq_len(weeks - 1) %>%
     map(~.create_comparison(weekly_ratings[[.x + 1]],
                             weekly_ratings[[.x]],
-                            weekly_results[[.x]]))
-  names(comparisons) <- weekly_results$date %>% unique()
-  comparisons
+                            weekly_results[[.x]])) %>%
+    bind_rows()
 }

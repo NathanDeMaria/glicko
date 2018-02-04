@@ -53,7 +53,7 @@ function(input, output) {
   })
 
   output$comparison <- renderUI({
-    rows <- comparisons[[as.integer(input$selected_week)]] %>%
+    rows <- comparisons %>% filter(date == input$selected_week) %>%
       select(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) %>%
       arrange(rank_current) %>%
       pmap(function(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) {

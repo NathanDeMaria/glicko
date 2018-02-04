@@ -1,7 +1,5 @@
 players <- ratings %>% dplyr::select(name) %>% unique()
-dates <- match_results$date %>% unique() %>% sort(decreasing = T)
-date_choices <- seq_along(dates) %>% rev()
-names(date_choices) <- dates
+date_choices <- match_results$date %>% unique() %>% sort(decreasing = T)
 
 navbarPage("ELO",
   tabPanel("Ratings", DT::dataTableOutput('ratings')),
