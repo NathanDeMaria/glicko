@@ -5,6 +5,7 @@ library(tibble)
 library(purrr)
 library(lubridate)
 library(readr)
+library(ggvis)
 
 data_path <- 'data/default.csv'
 hyper_path <- 'data/hyperparams.RDS'

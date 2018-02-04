@@ -9,15 +9,34 @@ function(input, output) {
       arrange(desc(mean))
   )
 
-  output$player <- renderPlot({
-    ratings %>% filter(name == input$player_name) %>%
-      ggplot() + geom_line(aes(x = date, y = mean)) +
-      geom_ribbon(aes(x = date,
-                      ymin = mean - sqrt(variance),
-                      ymax = mean + sqrt(variance)),
-                  alpha = .2) +
-      labs(title = input$player_name, x = 'Date', y = 'Rating')
+  # Okay, so ggvis+shiny+tooltip could use some work
+  # This `eventReactive` + `reactive` pattern is what you use
+  # when you're updating ggvis from something that's not a ggvis input
+  # Gets weird b/c the way add_tooltip works w/ non-plotted columns
+  # requires you to have a "key" column and access the DF by row
+  # which means I have to double-access this `eventReactive`. Srry.
+  my_ratings <- eventReactive(input$player_name, {
+    comparisons %>% filter(player == input$player_name) %>%
+      mutate(week_num = order(date_current)) %>%
+      filter(!is.na(opponent)) %>%
+      mutate(id = seq_len(n()))
   })
+  reactive({
+    my_ratings() %>%
+      ggvis(x = ~week_num, y = ~mean_current, key := ~id) %>%
+      layer_lines() %>%
+      # layer_lines alone doesn't work w/ tooltips
+      # so I also have to include points :(
+      layer_points(size := 20) %>%
+      add_tooltip(function(x) {
+        # ggvis tooltip boilerplate for skipping null displays
+        if(is.null(x)) {return(NULL)}
+        row <- my_ratings()[x$id,]
+        row$tooltip_text
+      }, 'hover') %>%
+      add_axis('x', title = 'Week') %>%
+      add_axis('y', title = 'Rating')
+  }) %>% bind_shiny('player')
 
   output$player_table <- renderTable({
     ratings %>% filter_most_recent() %>%
