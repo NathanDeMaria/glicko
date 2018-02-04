@@ -54,15 +54,16 @@ function(input, output) {
 
   output$comparison <- renderUI({
     rows <- comparisons %>% filter(date == input$selected_week) %>%
-      select(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) %>%
+      select(
+        player, opponent, result,
+        rank_change, rank_current, rank_sign,
+        player_score, opponent_score,
+        mean_change_text, mean_current) %>%
       arrange(rank_current) %>%
-      pmap(function(player, opponent, rank_change, rank_current, player_score, opponent_score, mean_change, mean_current) {
-        rank_sign <- ifelse(rank_change > 0, '↑',
-                            ifelse(rank_change < 0, '↓', '↔'))
-        result <- ifelse(player_score > opponent_score, 'Win',
-                         ifelse(player_score < opponent_score, 'Loss', 'Tie'))
-        mean_change_text <- ifelse(mean_change > 0, sprintf('+%.01f', mean_change),
-                                   ifelse(mean_change < 0, sprintf('-%.01f', abs(mean_change)), '↔'))
+      pmap(function(player, opponent, result,
+                    rank_change, rank_current, rank_sign,
+                    player_score, opponent_score,
+                    mean_change_text, mean_current) {
         htmlTemplate(
           'playerSummary.html',
           rank = rank_current,
