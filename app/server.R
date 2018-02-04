@@ -39,7 +39,9 @@ function(input, output) {
       sprintf("%s %.02f%% over %s", p2, 100 - win_prob * 100, p1)
     }
 
-    ggplot(data.frame(x = seq(0, 3000)), aes(x = x)) +
+    min_point <- min(ratings$mean) - 2.5 * sqrt(max(ratings$variance))
+    max_point <- max(ratings$mean) + 2.5 * sqrt(max(ratings$variance))
+    ggplot(data.frame(x = seq(min_point, max_point)), aes(x = x)) +
       stat_function(fun = dnorm, n = 3000,
                     args = list(mean = p1_rating$mean, sd = sqrt(p1_rating$variance)),
                     aes(color = 'Player 1')) +
